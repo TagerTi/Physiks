@@ -5,6 +5,8 @@ pub mod physics {
 
     const AVERAGE_DENSITY: f32 = 5.514;
     const PI: f32 = 3.14159_26535;
+    const FRICTION_MULTIPLYER: f32 = 1.; // 0.995?
+    const RESTITUTION: f32 = 0.5;
 
     pub struct Circle {
         position: Vec2,
@@ -12,7 +14,6 @@ pub mod physics {
         radius: f32,
         color: Color,
         tag: String,
-        friction_multiplyer: f32,
     }
 
     impl Circle {
@@ -27,7 +28,6 @@ pub mod physics {
                 radius: 15.,
                 color: Color::WHITE,
                 tag: "not set".into(),
-                friction_multiplyer: 0.995,
             }
         }
 
@@ -44,7 +44,6 @@ pub mod physics {
                     radius,
                     color,
                     tag,
-                    friction_multiplyer: 0.995
                 }
         }
 
@@ -84,7 +83,7 @@ pub mod physics {
 
         pub fn move_with_velocity(&mut self, screen_size: Vec2) {
             self.position += self.velocity;
-            self.velocity *= self.friction_multiplyer;
+            self.velocity *= FRICTION_MULTIPLYER;
 
             self._reflect_from_edges(screen_size);
             
@@ -120,14 +119,14 @@ pub mod physics {
         }
 
         pub fn collides(&self, other: &Circle) -> bool {
-            let distance = (other.position - self.position).length();
+            let distance = (other.position - self.position).length(); // Falls langsam, weg von sqrt!
             distance < self.radius + other.radius
         }
 
-        pub fn collide_with(&mut self, other: &mut Circle) {
+        pub fn collide_with_old(&mut self, other: &mut Circle) { // Old and wrong
             // Calculating things
-            let self_energy = self.velocity.length() * self.mass();
-            let other_energy = other.velocity.length() * other.mass();
+            let self_energy = ( self.mass() * self.velocity.length()*self.velocity.length() ) / 2.;
+            let other_energy = ( other.mass() * other.velocity.length()*other.velocity.length() ) / 2.;
 
             let collision_normal = (other.position - self.position).normalize();
 
@@ -142,9 +141,17 @@ pub mod physics {
             other.velocity = other_new_vel;
 
             // Seperating Circles
-            let overlaping_factor = (other.position - self.position).length() - (self.radius + other.radius);
-            self.position += collision_normal * overlaping_factor/2.;
-            other.position -= collision_normal * overlaping_factor/2.;
+            let overlaping_depth = (other.position - self.position).length() - (self.radius + other.radius);
+            self.position += collision_normal * overlaping_depth/2.;
+            other.position -= collision_normal * overlaping_depth/2.;
+        }
+
+        pub fn collide_with(&mut self, other: &mut Circle) {
+            let collision_normal = (other.position - self.position).normalize();
+            // Seperating Circles
+            let overlaping_depth = (other.position - self.position).length() - (self.radius + other.radius);
+            self.position += collision_normal * overlaping_depth/2.;
+            other.position -= collision_normal * overlaping_depth/2.;
         }
 
         pub fn is_touching_point(&self, point: Vec2) -> bool {
