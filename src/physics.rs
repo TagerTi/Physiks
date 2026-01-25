@@ -12,6 +12,7 @@ pub mod physics {
         radius: f32,
         color: Color,
         tag: String,
+        friction_multiplyer: f32,
     }
 
     impl Circle {
@@ -26,6 +27,7 @@ pub mod physics {
                 radius: 15.,
                 color: Color::WHITE,
                 tag: "not set".into(),
+                friction_multiplyer: 0.995,
             }
         }
 
@@ -34,17 +36,19 @@ pub mod physics {
             velocity: Vec2,
             radius: f32,
             color: Color,
-            tag: String,) -> Self {
+            tag: String,
+        ) -> Self {
                 Self {
                     position,
                     velocity,
                     radius,
                     color,
                     tag,
+                    friction_multiplyer: 0.995
                 }
         }
 
-        pub(crate) fn _reflect_from_edges(&mut self, screen_size: Vec2) {
+        fn _reflect_from_edges(&mut self, screen_size: Vec2) {
             if self.position.x > screen_size.x - self.radius || self.position.x < self.radius {
                 self.velocity.x *= -1.;
                 self.position.x = self.position.x.clamp(self.radius, screen_size.x - self.radius);
@@ -58,7 +62,7 @@ pub mod physics {
             }
         }
 
-        pub(crate) fn _mirror_from_edges(&mut self, screen_size: Vec2) {
+        fn _mirror_from_edges(&mut self, screen_size: Vec2) {
             if self.position.x > screen_size.x + self.radius {
                 self.position.x -= screen_size.x + self.radius*2.;
                 println!("Tag: {} moved to -x", self.tag);
@@ -80,7 +84,7 @@ pub mod physics {
 
         pub fn move_with_velocity(&mut self, screen_size: Vec2) {
             self.position += self.velocity;
-            self.velocity *= 0.995;
+            self.velocity *= self.friction_multiplyer;
 
             self._reflect_from_edges(screen_size);
             
