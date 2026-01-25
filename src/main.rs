@@ -1,10 +1,11 @@
 //! The simplest possible example that does something.
 #![allow(clippy::unnecessary_wraps)]
 
+use core::time;
 use std::{vec};
 use ggez::{ Context, GameResult, conf::{FullscreenType, WindowMode}, event::{self, MouseButton}, glam::*, graphics::{self, Color} };
 
-const WINDOW_SIZE: Vec2 = vec2(800.,600.);
+const WINDOW_SIZE: Vec2 = vec2(1000.,800.);
 const AVERAGE_DENSITY: f32 = 5.514;
 const PI: f32 = 3.14159_26535;
 
@@ -34,14 +35,26 @@ impl Circle {
     fn move_with_velocity(&mut self, screen_size: Vec2) { // Speed should not be faster than screen size.
         self.position += self.velocity;
 
-        if self.position.x > screen_size.x {self.position.x -= screen_size.x + self.radius*2.}
-        if self.position.x < -self.radius {self.position.x += screen_size.x + self.radius*2.}
+        if self.position.x > screen_size.x + self.radius {
+            self.position.x -= screen_size.x + self.radius*2.;
+            println!("Tag: {} moved to -x", self.tag);
+        }
+        if self.position.x < -self.radius {
+            self.position.x += screen_size.x + self.radius*2.;
+            println!("Tag: {} moved to +x", self.tag);
+        }
 
-        if self.position.y > screen_size.y + self.radius {self.position.y -= screen_size.y + self.radius*2.}
-        if self.position.y < -self.radius {self.position.y += screen_size.y + self.radius*2.}
+        if self.position.y > screen_size.y + self.radius {
+            self.position.y -= screen_size.y + self.radius*2.; 
+            println!("Tag: {} moved to -y", self.tag);
+        }
+        if self.position.y < -self.radius {
+            self.position.y += screen_size.y + self.radius*2.;
+            println!("Tag: {} moved to +y", self.tag);
+        }
         
 
-        // Nicht unbeding nötig
+        // Nicht unbeding nötig. Nur zum Debugen
 
         if self.velocity.x.abs() > screen_size.x || 
            self.velocity.y.abs() > screen_size.y 
@@ -92,6 +105,11 @@ impl Circle {
 
         self.velocity = self_new_vel;
         other.velocity = other_new_vel;
+
+        // Seperating Circles
+        let overlaping_factor = (other.position - self.position).length() - (self.radius + other.radius);
+        self.position += collision_normal * overlaping_factor/2.;
+        other.position -= collision_normal * overlaping_factor/2.;
     }
 }
 
@@ -105,15 +123,15 @@ impl MainState {
     fn new(_ctx: &mut Context) -> GameResult<MainState> {
         let mut circles: Vec<Circle> = vec![];
         
-        circles.push(
-            Circle { 
-                position: vec2(10.,380.0), 
-                velocity: vec2(1.,0.), 
-                radius: 15., 
-                color: Color::WHITE, 
-                tag: "first".into()
-            }
-        );
+        // circles.push(
+        //     Circle { 
+        //         position: vec2(10.,380.0), 
+        //         velocity: vec2(1.,0.), 
+        //         radius: 15., 
+        //         color: Color::WHITE, 
+        //         tag: "first".into()
+        //     }
+        // );
 
         Ok(MainState { circles, is_placing: false, place_position: Vec2::ZERO })
     }
