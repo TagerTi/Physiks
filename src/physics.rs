@@ -142,5 +142,16 @@ pub mod physics {
             self.position += collision_normal * overlaping_factor/2.;
             other.position -= collision_normal * overlaping_factor/2.;
         }
+
+        pub fn is_touching_point(&self, point: Vec2) -> bool {
+            (point - self.position).length() < self.radius
+        }
+
+        pub fn apply_force(&mut self, force: Vec2) {
+            self.velocity += force;
+        }
+
+        pub fn position(&self) -> Vec2 {self.position}
+        pub fn velocity(&self) -> Vec2 {self.velocity}
     }
 }

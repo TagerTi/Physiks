@@ -11,13 +11,15 @@ pub mod window {
         circles: Vec<Circle>,
         is_placing: bool,
         place_position: Vec2,
+        is_draging: bool,
+        selected_circle: usize,
     }
 
     impl MainState {
         pub fn new(_ctx: &mut Context) -> GameResult<MainState> {
             let circles: Vec<Circle> = vec![];
 
-            Ok(MainState { circles, is_placing: false, place_position: Vec2::ZERO })
+            Ok(MainState { circles, is_placing: false, place_position: Vec2::ZERO, is_draging: false, selected_circle: 0 })
         }
     }
 
@@ -81,22 +83,24 @@ pub mod window {
 
                     self.is_placing = false;
                 }
+                else if self.is_draging {
+                    let circle = &mut self.circles[self.selected_circle];
+                    circle.apply_force((vec2(x,y) - circle.position()) / 100.);
+
+                    self.is_draging = false;
+                    self.selected_circle = 0;
+                }
                 else {
-                    self.is_placing = true;
-                    self.place_position = vec2(x,y);
+                    if let Some(index) = self.circles.iter().position(|circle| circle.is_touching_point(vec2(x, y))) {
+                        self.selected_circle = index;
+                        self.is_draging = true;
+                    } 
+                    else {
+                        self.is_placing = true;
+                        self.place_position = vec2(x,y);
+                    }
                 }
             }
-
-            Ok(())
-        }
-
-        fn key_down_event(
-            &mut self,
-            _ctx: &mut Context,
-            _input: ggez::input::keyboard::KeyInput,
-            _repeated: bool,
-        ) -> Result<(), ggez::GameError> {
-            
 
             Ok(())
         }
