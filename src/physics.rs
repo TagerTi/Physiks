@@ -135,32 +135,6 @@ pub mod physics {
             distance < self.radius + other.radius
         }
 
-        pub fn collide_with_old(&mut self, other: &mut Circle) {
-            // Old and wrong
-            // Calculating things
-            let self_energy = (self.mass * self.velocity.length() * self.velocity.length()) / 2.;
-            let other_energy =
-                (other.mass * other.velocity.length() * other.velocity.length()) / 2.;
-
-            let collision_normal = (other.position - self.position).normalize();
-
-            let energy = self_energy + other_energy;
-            let velocity = (self.velocity + other.velocity).length();
-
-            // Setting new Velocity
-            let self_new_vel = -collision_normal * velocity * other_energy / energy;
-            let other_new_vel = collision_normal * velocity * self_energy / energy;
-
-            self.velocity = self_new_vel;
-            other.velocity = other_new_vel;
-
-            // Seperating Circles
-            let overlaping_depth =
-                (other.position - self.position).length() - (self.radius + other.radius);
-            self.position += collision_normal * overlaping_depth / 2.;
-            other.position -= collision_normal * overlaping_depth / 2.;
-        }
-
         pub fn collide_with(&mut self, other: &mut Circle) {
             let line_of_impact = other.position - self.position;
             let collision_normal = line_of_impact.normalize();
