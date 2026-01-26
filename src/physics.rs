@@ -9,16 +9,16 @@ pub mod physics {
 
     const AVERAGE_DENSITY: f32 = 5.514;
     const PI: f32 = 3.14159_26535;
-    const FRICTION_MULTIPLYER: f32 = 1.; // 0.995?
-    const RESTITUTION: f32 = 1.0;
+    const FRICTION_MULTIPLYER: f32 = 0.996; // 0.995?
+    // const RESTITUTION: f32 = 1.0;
 
     pub struct Circle {
         position: Vec2,
         velocity: Vec2,
         radius: f32,
         mass: f32,
-        color: Color,
-        tag: String,
+        pub color: Color,
+        pub tag: String,
     }
 
     impl Circle {
@@ -130,6 +130,21 @@ pub mod physics {
             canvas.draw(&circle.expect("AAA"), self.position);
         }
 
+        pub fn draw_outline(&self, canvas: &mut graphics::Canvas, ctx: &Context, width: f32, color: Color) {
+            let t = 0.01 * self.radius;
+
+            let circle = graphics::Mesh::new_circle(
+                ctx,
+                graphics::DrawMode::stroke(width),
+                vec2(0., 0.),
+                self.radius,
+                t,
+                color,
+            );
+
+            canvas.draw(&circle.expect("AAA"), self.position);
+        }
+
         pub fn is_colliding_with(&self, other: &Circle) -> bool {
             let distance = (other.position - self.position).length(); // Falls langsam, weg von sqrt!
             distance < self.radius + other.radius
@@ -137,9 +152,11 @@ pub mod physics {
 
         pub fn collide_with(&mut self, other: &mut Circle) {
             let line_of_impact = other.position - self.position;
-            let collision_normal = line_of_impact.normalize();
-            // Seperating Circles
             let distance = line_of_impact.length();
+
+            let collision_normal = line_of_impact.normalize();
+
+            // Seperating Circles
             let overlaping_depth = distance - (self.radius + other.radius);
             self.position += collision_normal * overlaping_depth / 2.;
             other.position -= collision_normal * overlaping_depth / 2.;
@@ -149,22 +166,17 @@ pub mod physics {
             let vel_diff = other.velocity - self.velocity;
 
             // Zaehler und Naenner von Kreis A von der Formel, die aus einem Bruch besteht
-
-            // Kreis A
-            let zaehler_a = 2. * other.mass * vel_diff.dot(line_of_impact);
+            let zaehler = 2. * vel_diff.dot(line_of_impact);
             let naenner = mass_sum * distance * distance;
 
+            // Kreis A
             let mut delta_vel_a = line_of_impact.clone();
-            delta_vel_a *= zaehler_a / naenner;
-
+            delta_vel_a *=  other.mass * zaehler / naenner;
             self.velocity += delta_vel_a;
 
             // Kreis B
-            let zaehler_b = 2. * self.mass * vel_diff.dot(line_of_impact);
-
-            let mut delta_vel_b = line_of_impact.clone() * -1.;
-            delta_vel_b *= zaehler_b / naenner;
-
+            let mut delta_vel_b = line_of_impact.clone();
+            delta_vel_b *= -self.mass * zaehler / naenner;
             other.velocity += delta_vel_b;
         }
 
