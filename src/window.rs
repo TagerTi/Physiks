@@ -11,7 +11,7 @@ pub mod window {
     use crate::physics::physics::Circle;
 
     pub const WINDOW_SIZE: Vec2 = vec2(1600., 800.);
-    const CAN_PLACE: bool = false;
+    const CAN_PLACE: bool = true;
     const CAN_DRAG: bool = true;
 
     const DISTANCE_TO_VELOCITY_RATIO: f32 = 50.;
