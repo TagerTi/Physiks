@@ -9,8 +9,10 @@ pub mod physics {
 
     const AVERAGE_DENSITY: f32 = 5.514;
     const PI: f32 = 3.14159_26535;
-    const FRICTION_MULTIPLYER: f32 = 0.996; // 0.995?
-    // const RESTITUTION: f32 = 1.0;
+    const FRICTION_PERCENTAGE: f32 = 0.3;
+    const RESTITUTION: f32 = 1.;
+
+    const GRAVITY: Vec2 = vec2(0., 9.80665);
 
     pub struct Circle {
         position: Vec2,
@@ -55,7 +57,7 @@ pub mod physics {
 
         fn _reflect_from_edges(&mut self, screen_size: Vec2) {
             if self.position.x > screen_size.x - self.radius || self.position.x < self.radius {
-                self.velocity.x *= -1.;
+                self.velocity.x *= -(1. - FRICTION_PERCENTAGE);
                 self.position.x = self
                     .position
                     .x
@@ -64,7 +66,7 @@ pub mod physics {
             }
 
             if self.position.y > screen_size.y - self.radius || self.position.y < self.radius {
-                self.velocity.y *= -1.;
+                self.velocity.y *= -(1. - FRICTION_PERCENTAGE);
                 self.position.y = self
                     .position
                     .y
@@ -96,7 +98,9 @@ pub mod physics {
         pub fn move_with_velocity(&mut self, screen_size: Vec2, dt: Duration) {
             //println!("{}", dt.as_secs_f32());
             self.position += self.velocity * dt.as_secs_f32() * 100.;
-            self.velocity *= FRICTION_MULTIPLYER;
+            self.velocity -= self.velocity * FRICTION_PERCENTAGE * dt.as_secs_f32();
+
+            self.velocity += GRAVITY * dt.as_secs_f32();
 
             self._reflect_from_edges(screen_size);
 
@@ -166,7 +170,7 @@ pub mod physics {
             let vel_diff = other.velocity - self.velocity;
 
             // Zaehler und Naenner von Kreis A von der Formel, die aus einem Bruch besteht
-            let zaehler = 2. * vel_diff.dot(line_of_impact);
+            let zaehler = 2. * vel_diff.dot(line_of_impact) * RESTITUTION;
             let naenner = mass_sum * distance * distance;
 
             // Kreis A
@@ -178,6 +182,16 @@ pub mod physics {
             let mut delta_vel_b = line_of_impact.clone();
             delta_vel_b *= -self.mass * zaehler / naenner;
             other.velocity += delta_vel_b;
+        }
+
+        pub fn seperate_from(&mut self, other: &mut Circle, substeprate: f32) {
+            let line_of_impact = other.position - self.position;
+            let distance = line_of_impact.length();
+            let collision_normal = line_of_impact.normalize();
+
+            let overlaping_depth = distance - (self.radius + other.radius);
+            self.position += collision_normal * overlaping_depth / 2. * substeprate;
+            other.position -= collision_normal * overlaping_depth / 2. * substeprate;
         }
 
         pub fn is_touching_point(&self, point: Vec2) -> bool {

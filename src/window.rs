@@ -5,7 +5,7 @@ pub mod window {
         glam::*,
         graphics::{self, Color},
     };
-    use rand::{seq::SliceRandom};
+    use rand::{Rng, seq::SliceRandom};
     use std::vec;
 
     use crate::physics::physics::Circle;
@@ -54,10 +54,30 @@ pub mod window {
 
     impl MainState {
         pub fn new(_ctx: &mut Context) -> GameResult<MainState> {
+            let mut rng = rand::rng();
+
             let mut circles: Vec<Circle> = vec![];
 
-            circles.push(Circle::new(vec2(WINDOW_SIZE.x/2.,WINDOW_SIZE.y/4.*3.), Vec2::ZERO));
-            build_pyramid(5, &mut circles, vec2(WINDOW_SIZE.x/2., WINDOW_SIZE.y/2.));
+            // circles.push(Circle::new(vec2(WINDOW_SIZE.x/2.,WINDOW_SIZE.y/4.*3.), Vec2::ZERO));
+            // build_pyramid(5, &mut circles, vec2(WINDOW_SIZE.x/2., WINDOW_SIZE.y/2.));
+
+            for _ in 0..500 {
+                let posi = vec2(rng.random_range(20.0..(WINDOW_SIZE.x - 20.0)),  rng.random_range(20.0..(WINDOW_SIZE.y - 20.0)));
+
+                let mut circle = Circle::new(
+                    posi, 
+                    Vec2::ZERO
+                );
+
+                let sin_cos_x = posi.x.sin_cos();
+                let sin_cos_y = posi.y.sin_cos();
+
+                let ratio_x = (((sin_cos_x.0 + 1.) / 2.) * 255.) as u8;
+                
+                circle.color = Color::from_rgb(ratio_x, ratio_x, ratio_x);
+
+                circles.push(circle);
+            }
 
             Ok(MainState {
                 circles,
@@ -71,6 +91,8 @@ pub mod window {
 
     impl event::EventHandler for MainState {
         fn update(&mut self, _ctx: &mut Context) -> GameResult {
+            //return Ok(());
+
             for prim in 0..self.circles.len() {
                 for sec in (prim + 1)..self.circles.len() {
                     let (left, right) = self.circles.split_at_mut(sec);
@@ -79,10 +101,26 @@ pub mod window {
 
                     if prim_circle.is_colliding_with(&sec_circle) {
                         prim_circle.collide_with(&mut sec_circle);
-                        //println!("COLLISION")
                     }
                 }
             }
+
+            // const SUBSTEPS: i8 = 1;
+
+            // // Substebs
+            // for _ in 0..SUBSTEPS {
+            //     for prim in 0..self.circles.len() {
+            //         for sec in (prim + 1)..self.circles.len() {
+            //             let (left, right) = self.circles.split_at_mut(sec);
+            //             let prim_circle = &mut left[prim];
+            //             let mut sec_circle = &mut right[0];
+
+            //             if prim_circle.is_colliding_with(&sec_circle) {
+            //                 prim_circle.seperate_from(&mut sec_circle, 1./SUBSTEPS as f32);
+            //             }
+            //         }
+            //     }
+            // }
 
             for circle in &mut self.circles {
                 circle.move_with_velocity(WINDOW_SIZE, _ctx.time.delta());
