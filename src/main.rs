@@ -2,7 +2,11 @@
 pub mod physics;
 pub mod window;
 
-use ggez::{ GameResult, conf::{FullscreenType, WindowMode}, event::{self} };
+use ggez::{
+    GameResult,
+    conf::{FullscreenType, WindowMode},
+    event::{self},
+};
 
 use crate::window::window::{MainState, WINDOW_SIZE};
 
@@ -26,7 +30,7 @@ pub fn main() -> GameResult {
 
     let cb = ggez::ContextBuilder::new("Physiks", "CodeTi").window_mode(window_mode);
     let (mut ctx, event_loop) = cb.build()?;
-    
+
     let state = MainState::new(&mut ctx)?;
 
     event::run(ctx, event_loop, state)
