@@ -61,7 +61,7 @@ pub mod window {
             // circles.push(Circle::new(vec2(WINDOW_SIZE.x/2.,WINDOW_SIZE.y/4.*3.), Vec2::ZERO));
             // build_pyramid(5, &mut circles, vec2(WINDOW_SIZE.x/2., WINDOW_SIZE.y/2.));
 
-            for _ in 0..500 {
+            for _ in 0..25 {
                 let posi = vec2(rng.random_range(20.0..(WINDOW_SIZE.x - 20.0)),  rng.random_range(20.0..(WINDOW_SIZE.y - 20.0)));
 
                 let mut circle = Circle::new(
